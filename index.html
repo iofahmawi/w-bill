@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>حاسبة المياه الشهرية</title>
+    
+    <meta name="theme-color" content="#2563eb">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-1024.png">
+    <link rel="apple-touch-icon" href="icon-1024.png">
+
+    <style>
+        :root {
+            --primary: #2563eb; 
+            --primary-light: #dbeafe;
+            --secondary-green: #10b981; 
+            --white: #ffffff;
+            --bg-light: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --error-red: #ef4444;
+            --radius: 16px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            --standard-height: 42px;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+        
+        html, body { height: 100%; background-color: var(--bg-light); }
+
+        body {
+            direction: rtl;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-main);
+        }
+        
+        .content-wrapper { flex-grow: 1; display: flex; flex-direction: column; }
+
+        .header-blue {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 40px 20px 80px; 
+            text-align: center;
+            border-bottom-left-radius: 40px;
+            border-bottom-right-radius: 40px;
+        }
+
+        .header-blue h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 10px; }
+        .header-blue p { font-size: 1rem; opacity: 0.9; }
+        
+        .card {
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 28px;
+            width: 92%;
+            max-width: 450px;
+            margin: -60px auto 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .input-group { margin-bottom: 15px; }
+        .readings-container { display: flex; gap: 12px; margin-bottom: 15px; }
+        .reading-input { flex: 1; }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            padding-right: 4px;
+            font-weight: 500;
+        }
+        
+        .input-group input {
+            width: 100%;
+            height: var(--standard-height);
+            padding: 6px 10px; 
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            text-align: center; 
+            transition: all 0.2s ease;
+            background: #fdfdfd;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary); 
+            background: var(--white);
+        }
+
+        .radio-group { margin: 15px 0; }
+        .radio-options {
+            display: flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 12px;
+            gap: 5px;
+            height: var(--standard-height);
+            align-items: center;
+        }
+
+        .radio-option { flex: 1; position: relative; height: 100%; }
+        .radio-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0; height: 0;
+        }
+
+        .radio-option label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            margin-bottom: 0;
+        }
+
+        .radio-option input[type="radio"]:checked + label {
+            background: var(--white);
+            color: var(--primary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        button#calculate-btn {
+            width: 100%;
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            height: var(--standard-height);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        button#calculate-btn:active { transform: scale(0.98); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; backdrop-filter: blur(4px); }
+        .modal-content { background-color: var(--white); border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); width: 100%; max-width: 450px; position: relative; max-height: 90vh; overflow-y: auto; }
+        #modal-results-content { padding: 25px 15px; } 
+        
+        .result-row { display: flex; justify-content: space-between; align-items: flex-end; margin: 8px 0; font-size: 0.95rem; } 
+        .result-text-value { display: inline-flex; gap: 12px; align-items: baseline; }
+        .result-label { color: var(--text-main); font-weight: 500; }
+        .result-value { color: var(--text-main); font-weight: 700; }
+        
+        hr { border: none; border-top: 1px solid #f1f5f9; margin: 15px 0; }
+        
+        .final-total-section { text-align: center; margin-top: 10px; }
+        .final-total-section p { font-size: 1rem; color: var(--text-main); margin: 0; } 
+        .final-total-section span { font-size: 1.55rem; font-weight: 800; color: var(--secondary-green); display: block; margin-top: 5px; line-height: 1; } 
+        
+        .table-container { border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 15px; width: 100%; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; } 
+        th, td { border-bottom: 1px solid #f1f5f9; padding: 10px 6px; text-align: center; } 
+        th { background-color: #f8fafc; color: var(--primary); font-weight: 700; }
+
+        .simple-footer { 
+            text-align: center; 
+            color: var(--text-muted); 
+            font-size: 0.9rem; 
+            padding: 20px 0 calc(15px + env(safe-area-inset-bottom, 0px)); 
+        }
+        .simple-footer a { color: var(--primary); font-weight: 700; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="content-wrapper">
+        <div class="header-blue">
+            <h2>حاسبة المياه الشهرية</h2>
+            <p>احسب فاتورة المياه والخدمات التقديرية</p>
+        </div>
+
+        <div class="card">
+            <div class="input-group">
+                <div class="readings-container">
+                    <div class="reading-input">
+                        <label for="previous-reading">القراءة السابقة</label>
+                        <input type="number" id="previous-reading" class="hide-kb-on-enter">
+                    </div>
+                    <div class="reading-input">
+                        <label for="current-reading">القراءة الحالية</label>
+                        <input type="number" id="current-reading" class="hide-kb-on-enter">
+                    </div>
+                </div>
+            </div>
+
+            <div class="radio-group">
+                <label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; display: block; font-weight: 500;">هل مخدوم بالصرف الصحي؟</label>
+                <div class="radio-options">
+                    <div class="radio-option">
+                        <input type="radio" id="sewer-yes" name="sewer-service" value="yes" checked>
+                        <label for="sewer-yes">نعم</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="sewer-no" name="sewer-service" value="no">
+                        <label for="sewer-no">لا</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="calculate-btn" onclick="runCalculation()">احسب القيمة</button>
+        </div>
+    </div>
+
+    <div id="result-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div id="modal-results-content"></div>
+        </div>
+    </div>
+    
+    <footer class="simple-footer">
+        طوّر بواسطة <a href="https://github.com/iofahmawi" target="_blank" rel="noopener noreferrer">iofahmawi</a>
+    </footer>
+
+    <script>
+        document.querySelectorAll('.hide-kb-on-enter').forEach(input => {
+            input.addEventListener('keypress', function(e) { if (e.key === 'Enter') { this.blur(); } });
+        });
+
+        function formatNumber(num) { return parseFloat(num).toString(); }
+        function formatCurrency(num) { return formatNumber(num.toFixed(2)); }
+        
+        function runCalculation() {
+            if (document.activeElement) document.activeElement.blur();
+            const success = calculateBill();
+            if (success) {
+                localStorage.setItem('water_currentReading', document.getElementById('current-reading').value);
+                localStorage.setItem('water_previousReading', document.getElementById('previous-reading').value);
+                localStorage.setItem('water_sewerService', document.querySelector('input[name="sewer-service"]:checked').value);
+            }
+        }
+
+        function calculateBill() {
+            const currentReadingInput = document.getElementById('current-reading');
+            const previousReadingInput = document.getElementById('previous-reading');
+            const isSewerService = document.getElementById('sewer-yes').checked;
+            
+            const modal = document.getElementById('result-modal');
+            const modalContentDiv = document.getElementById('modal-results-content');
+            
+            const currentReadingValue = currentReadingInput.value.trim();
+            const previousReadingValue = previousReadingInput.value.trim();
+
+            if (currentReadingValue === '') {
+                modalContentDiv.innerHTML = '<p style="color:var(--error-red); text-align:center; font-weight:bold; padding: 20px;">الرجاء إدخال القراءة الحالية.</p>';
+                modal.style.display = 'flex';
+                return false;
+            }
+
+            const currentReading = parseFloat(currentReadingValue);
+            const hasPrevious = (previousReadingValue !== '' && parseFloat(previousReadingValue) >= 0);
+            const previousReading = hasPrevious ? parseFloat(previousReadingValue) : 0;
+
+            if (hasPrevious && currentReading < previousReading) {
+                modalContentDiv.innerHTML = '<p style="color:var(--error-red); text-align:center; font-weight:bold; padding: 20px;">القراءة الحالية أقل من السابقة!</p>';
+                modal.style.display = 'flex';
+                return false;
+            }
+                
+            const consumption = currentReading - previousReading;
+            const waterTariffs = [ [6, 2.50], [6, 0.60], [6, 0.80], [6, 1.10], [6, 1.40], [12, 1.80] ];
+            const sewerTariffs = [ [6, 0.23], [6, 0.15], [6, 0.50], [6, 0.70], [6, 0.85], [12, 0.95] ];
+            const sliceNames = [ "0 - 6", "7 - 12", "13 - 18", "19 - 24", "25 - 30", "31 - 42", "43 فما فوق" ];
+
+            let waterTotal = 0.0, sewerTotal = 0.0, remaining = consumption, tableRowsHtml = '';
+
+            for (let i = 0; i < waterTariffs.length; i++) {
+                if (remaining <= 0) break; 
+                const [blockSize, waterPrice] = waterTariffs[i];
+                const [_, sewerPrice] = sewerTariffs[i];
+                const used = Math.min(remaining, blockSize);
+                waterTotal += used * waterPrice;
+                if (isSewerService) sewerTotal += used * sewerPrice;
+                remaining -= used;
+                tableRowsHtml += `<tr><td>${sliceNames[i]}</td><td>${formatNumber(used)}</td><td>${formatCurrency(waterPrice)}</td><td>${isSewerService ? formatCurrency(sewerPrice) : '0'}</td></tr>`;
+            }
+
+            if (remaining > 0) {
+                const waterPrice = 2.20, sewerPrice = 1.20;
+                waterTotal += remaining * waterPrice;
+                if (isSewerService) sewerTotal += remaining * sewerPrice;
+                tableRowsHtml += `<tr><td>${sliceNames[6]}</td><td>${formatNumber(remaining)}</td><td>${formatCurrency(waterPrice)}</td><td>${isSewerService ? formatCurrency(sewerPrice) : '0'}</td></tr>`;
+            }
+
+            const totalBeforeSupport = waterTotal + sewerTotal;
+            const support = consumption <= 42 ? 13.65 : 0.0; 
+            const finalTotal = Math.max(0, totalBeforeSupport - support);
+
+            modalContentDiv.innerHTML = `
+                <div style="width: 100%; text-align: center; margin-bottom: 20px;">
+                    <h2 style="color: var(--secondary-green); font-size: 1.1rem; font-weight: 700;">${isSewerService ? 'مخدوم بالصرف الصحي' : 'غير مخدوم بالصرف'}</h2>
+                </div>
+                <div class="result-row" style="margin-top: 15px; margin-bottom: 10px;"><span class="result-label" style="font-weight: bold;">تفاصيل استهلاك ${formatNumber(consumption)} م³:</span></div>
+                <div class="table-container">
+                    <table><thead><tr><th>الشريحة</th><th>استهلاك</th><th>مياه</th><th>صرف</th></tr></thead>
+                    <tbody>${tableRowsHtml}</tbody></table>
+                </div>
+                <div class="result-row"><span class="result-text-value"><span class="result-label">إجمالي المياه:</span><span class="result-value">${formatCurrency(waterTotal)}</span></span></div>
+                <div class="result-row"><span class="result-text-value"><span class="result-label">إجمالي الصرف:</span><span class="result-value">${formatCurrency(sewerTotal)}</span></span></div>
+                <div class="result-row" style="margin-top: 15px;"><span class="result-text-value"><span class="result-label">الإجمالي قبل الدعم:</span><span class="result-value">${formatCurrency(totalBeforeSupport)}</span></span></div>
+                <div class="result-row"><span class="result-text-value"><span class="result-label">قيمة الدعم الحكومي:</span><span class="result-value">${formatCurrency(support)}</span></span></div>
+                <hr>
+                <div class="final-total-section"><p>المبلغ النهائي المطلوب:</p><span>${formatCurrency(finalTotal)}</span></div>
+            `;
+            
+            modal.style.display = 'flex';
+            modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+            return true;
+        }
+
+        window.onload = () => {
+            const savedCurrent = localStorage.getItem('water_currentReading');
+            if (savedCurrent) {
+                document.getElementById('current-reading').value = savedCurrent;
+                document.getElementById('previous-reading').value = localStorage.getItem('water_previousReading');
+                const savedSewer = localStorage.getItem('water_sewerService');
+                if (savedSewer) document.getElementById(savedSewer === 'yes' ? 'sewer-yes' : 'sewer-no').checked = true;
+            }
+        };
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Water App: SW Registered'))
+                .catch(err => console.log('Water App: SW Failed', err));
+            });
+        }
+    </script>
+</body>
+</html>

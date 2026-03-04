@@ -1,0 +1,16 @@
+{
+    "name": "حاسبة فاتورة الماء",
+    "short_name": "حاسبة الماء",
+    "description": "حاسبة بسيطة لتقدير قيمة فاتورة الماء الشهرية.",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#1976D2",
+    "icons": [
+        {
+            "src": "icon-1440.png",
+            "sizes": "1440x1440",
+            "type": "image/png"
+        }
+    ]
+}
