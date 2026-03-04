@@ -186,6 +186,8 @@
             padding: 20px 0 calc(15px + env(safe-area-inset-bottom, 0px)); 
         }
         .simple-footer a { color: var(--primary); font-weight: 700; text-decoration: none; }
+
+        .modal-content { cursor: pointer; }
     </style>
 </head>
 <body>
@@ -238,6 +240,7 @@
         طوّر بواسطة <a href="https://github.com/iofahmawi" target="_blank" rel="noopener noreferrer">iofahmawi</a>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         document.querySelectorAll('.hide-kb-on-enter').forEach(input => {
             input.addEventListener('keypress', function(e) { if (e.key === 'Enter') { this.blur(); } });
@@ -331,6 +334,23 @@
             
             modal.style.display = 'flex';
             modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+            document.querySelector('.modal-content').onclick = (event) => {
+                event.stopPropagation();
+                const el = document.querySelector('.modal-content');
+                const prevMaxHeight = el.style.maxHeight;
+                const prevOverflow = el.style.overflowY;
+                el.style.maxHeight = 'none';
+                el.style.overflowY = 'visible';
+                html2canvas(el, { scale: window.devicePixelRatio * 3, useCORS: true }).then(canvas => {
+                    el.style.maxHeight = prevMaxHeight;
+                    el.style.overflowY = prevOverflow;
+                    const link = document.createElement('a');
+                    const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+                    link.download = `فاتورة-المياه-${today}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                });
+            };
             return true;
         }
 
