@@ -1,4 +1,4 @@
-const CACHE_NAME = 'water-bill-calculator-cache-v8';
+const CACHE_NAME = 'water-bill-calculator-cache-v9';
 const GOOGLE_FONTS_CACHE_NAME = 'google-fonts-cache-v1';
 
 const urlsToCache = [
