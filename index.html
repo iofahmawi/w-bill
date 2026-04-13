@@ -287,33 +287,46 @@
             }
                 
             const consumption = currentReading - previousReading;
-            const waterTariffs = [ [6, 2.50], [6, 0.60], [6, 0.80], [6, 1.10], [6, 1.40], [12, 1.80] ];
-            const sewerTariffs = [ [6, 0.23], [6, 0.15], [6, 0.50], [6, 0.70], [6, 0.85], [12, 0.95] ];
-            const sliceNames = [ "0 - 6", "7 - 12", "13 - 18", "19 - 24", "25 - 30", "31 - 42", "43 فما فوق" ];
+            const waterTariffs = [ [6, 0.60], [6, 0.80], [6, 1.10], [6, 1.40], [12, 1.80] ];
+            const sewerTariffs = [ [6, 0.15], [6, 0.50], [6, 0.70], [6, 0.85], [12, 0.95] ];
+            const sliceNames = [ "7 - 12", "13 - 18", "19 - 24", "25 - 30", "31 - 42", "43 فما فوق" ];
 
-            let waterTotal = 0.0, sewerTotal = 0.0, remaining = consumption, tableRowsHtml = '';
+            let waterTotal = 0.0, sewerTotal = 0.0, tableRowsHtml = '';
 
-            for (let i = 0; i < waterTariffs.length; i++) {
-                if (remaining <= 0) break; 
-                const [blockSize, waterPrice] = waterTariffs[i];
-                const [_, sewerPrice] = sewerTariffs[i];
-                const used = Math.min(remaining, blockSize);
-                waterTotal += used * waterPrice;
-                if (isSewerService) sewerTotal += used * sewerPrice;
-                remaining -= used;
-                tableRowsHtml += `<tr><td>${sliceNames[i]}</td><td>${formatNumber(used)}</td><td>${formatCurrency(waterPrice)}</td><td>${isSewerService ? formatCurrency(sewerPrice) : '0'}</td></tr>`;
+            if (consumption <= 6) {
+                // شريحة مقطوعة — ثابتة بغض النظر عن الكمية، لا دعم
+                waterTotal = 2.50;
+                sewerTotal = isSewerService ? 0.23 : 0.0;
+                tableRowsHtml = `<tr><td>0 - 6</td><td>${formatNumber(consumption)}</td><td>مقطوعة</td><td>${isSewerService ? 'مقطوعة' : '0'}</td></tr>`;
+            } else {
+                // الشريحة الأولى (0-6) دائمًا مقطوعة حتى للاستهلاك الأعلى
+                waterTotal = 2.50;
+                sewerTotal = isSewerService ? 0.23 : 0.0;
+                tableRowsHtml = `<tr><td>0 - 6</td><td>6</td><td>مقطوعة</td><td>${isSewerService ? 'مقطوعة' : '0'}</td></tr>`;
+
+                let remaining = consumption - 6;
+                for (let i = 0; i < waterTariffs.length; i++) {
+                    if (remaining <= 0) break;
+                    const [blockSize, waterPrice] = waterTariffs[i];
+                    const [_, sewerPrice] = sewerTariffs[i];
+                    const used = Math.min(remaining, blockSize);
+                    waterTotal += used * waterPrice;
+                    if (isSewerService) sewerTotal += used * sewerPrice;
+                    remaining -= used;
+                    tableRowsHtml += `<tr><td>${sliceNames[i]}</td><td>${formatNumber(used)}</td><td>${formatCurrency(waterPrice)}</td><td>${isSewerService ? formatCurrency(sewerPrice) : '0'}</td></tr>`;
+                }
+
+                if (remaining > 0) {
+                    const waterPrice = 2.20, sewerPrice = 1.20;
+                    waterTotal += remaining * waterPrice;
+                    if (isSewerService) sewerTotal += remaining * sewerPrice;
+                    tableRowsHtml += `<tr><td>${sliceNames[5]}</td><td>${formatNumber(remaining)}</td><td>${formatCurrency(waterPrice)}</td><td>${isSewerService ? formatCurrency(sewerPrice) : '0'}</td></tr>`;
+                }
+
+
             }
 
-            if (remaining > 0) {
-                const waterPrice = 2.20, sewerPrice = 1.20;
-                waterTotal += remaining * waterPrice;
-                if (isSewerService) sewerTotal += remaining * sewerPrice;
-                tableRowsHtml += `<tr><td>${sliceNames[6]}</td><td>${formatNumber(remaining)}</td><td>${formatCurrency(waterPrice)}</td><td>${isSewerService ? formatCurrency(sewerPrice) : '0'}</td></tr>`;
-            }
-
-            const totalBeforeSupport = waterTotal + sewerTotal;
-            const support = consumption <= 42 ? 13.65 : 0.0; 
-            const finalTotal = Math.max(0, totalBeforeSupport - support);
+            const finalTotal = waterTotal + sewerTotal;
 
             modalContentDiv.innerHTML = `
                 <div style="width: 100%; text-align: center; margin-bottom: 20px;">
@@ -326,8 +339,6 @@
                 </div>
                 <div class="result-row"><span class="result-text-value"><span class="result-label">إجمالي المياه:</span><span class="result-value">${formatCurrency(waterTotal)}</span></span></div>
                 <div class="result-row"><span class="result-text-value"><span class="result-label">إجمالي الصرف:</span><span class="result-value">${formatCurrency(sewerTotal)}</span></span></div>
-                <div class="result-row" style="margin-top: 15px;"><span class="result-text-value"><span class="result-label">الإجمالي قبل الدعم:</span><span class="result-value">${formatCurrency(totalBeforeSupport)}</span></span></div>
-                <div class="result-row"><span class="result-text-value"><span class="result-label">قيمة الدعم الحكومي:</span><span class="result-value">${formatCurrency(support)}</span></span></div>
                 <hr>
                 <div class="final-total-section"><p>المبلغ النهائي المطلوب:</p><span>${formatCurrency(finalTotal)}</span></div>
             `;
