@@ -294,15 +294,15 @@
             let waterTotal = 0.0, sewerTotal = 0.0, tableRowsHtml = '';
 
             if (consumption <= 6) {
-                // شريحة مقطوعة — ثابتة بغض النظر عن الكمية، لا دعم
+                // شريحة مقطوعية — ثابتة بغض النظر عن الكمية، لا دعم
                 waterTotal = 2.50;
                 sewerTotal = isSewerService ? 0.23 : 0.0;
-                tableRowsHtml = `<tr><td>0 - 6</td><td>${formatNumber(consumption)}</td><td>مقطوعة</td><td>${isSewerService ? 'مقطوعة' : '0'}</td></tr>`;
+                tableRowsHtml = `<tr><td>0 - 6</td><td>${formatNumber(consumption)}</td><td>2.50</td><td>${isSewerService ? '0.23' : '0'}</td></tr>`;
             } else {
-                // الشريحة الأولى (0-6) دائمًا مقطوعة حتى للاستهلاك الأعلى
+                // الشريحة الأولى (0-6) دائمًا مقطوعية حتى للاستهلاك الأعلى
                 waterTotal = 2.50;
                 sewerTotal = isSewerService ? 0.23 : 0.0;
-                tableRowsHtml = `<tr><td>0 - 6</td><td>6</td><td>مقطوعة</td><td>${isSewerService ? 'مقطوعة' : '0'}</td></tr>`;
+                tableRowsHtml = `<tr><td>0 - 6</td><td>6</td><td>2.50</td><td>${isSewerService ? '0.23' : '0'}</td></tr>`;
 
                 let remaining = consumption - 6;
                 for (let i = 0; i < waterTariffs.length; i++) {
